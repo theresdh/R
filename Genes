@@ -1,0 +1,35 @@
+eukaryote <- read_delim("ftp://ftp.ncbi.nlm.nih.gov/genomes/GENOME_REPORTS/eukaryotes.txt", delim = "\t") %>% 
+  select(Group, Genes, Status,
+         Genome.size = `Size (Mb)`, 
+         GC = `GC%`) %>% 
+  mutate(Genes = as.numeric(Genes),
+         GC = as.numeric(GC),
+         Genome.size = Genome.size*10^3)
+
+prokaryote <- read_delim("ftp://ftp.ncbi.nlm.nih.gov/genomes/GENOME_REPORTS/prokaryotes.txt", delim = "\t") %>% 
+  select(Group, Genes, Status,
+         Genome.size = `Size (Mb)`, 
+         GC = `GC%`) %>% 
+  filter(Status != "Scaffold",
+         Status != "Contig") %>% 
+  mutate(Group = "Bacteria",
+         Genes = as.numeric(Genes),
+         GC = as.numeric(GC),
+         Genome.size = Genome.size*10^3) 
+
+virus <- read_delim("ftp://ftp.ncbi.nlm.nih.gov/genomes/GENOME_REPORTS/viruses.txt",delim = "\t") %>% 
+  select(Group, Genes, Status,
+         Genome.size = `Size (Kb)`, 
+         GC = `GC%`) %>% 
+  mutate(Group = "Viruses",
+         Genes = as.numeric(Genes),
+         GC = as.numeric(GC))
+
+
+t <- bind_rows(eukaryote, prokaryote, virus) %>% 
+  mutate(Group = factor(Group,
+                        levels = c("Viruses", "Bacteria", "Fungi",
+                                   "Protists", "Plants", "Animals"))) %>% 
+  drop_na(Group, Genes, Status, Genome.size, GC) 
+
+plot_colors <- c("#d1495b", "#edae49", "#66a182", "#0492c2", "#757c88", "#9b59b6")
